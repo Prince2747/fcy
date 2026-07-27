@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\FcyRequest;
 use App\Models\HrUser;
-use Illuminate\Auth\Access\Response;
 
 class FcyRequestPolicy
 {

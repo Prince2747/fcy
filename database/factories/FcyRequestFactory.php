@@ -2,7 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\Currency;
+use App\Models\Customer;
 use App\Models\FcyRequest;
+use App\Models\PaymentMethod;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,12 +21,12 @@ class FcyRequestFactory extends Factory
     public function definition(): array
     {
         return [
-            'request_number' => 'GDA-FCY-' . fake()->unique()->numerify('0000000000'),
-            'customer_id' => \App\Models\Customer::factory(),
+            'request_number' => 'GDA-FCY-'.fake()->unique()->numerify('0000000000'),
+            'customer_id' => Customer::factory(),
             'proforma_invoice_number' => fake()->numerify('PI-########'),
             'proforma_invoice_date' => fake()->date(),
-            'payment_method_id' => \App\Models\PaymentMethod::factory(),
-            'currency_id' => \App\Models\Currency::factory(),
+            'payment_method_id' => PaymentMethod::factory(),
+            'currency_id' => Currency::factory(),
             'fcy_amount_requested' => fake()->randomFloat(2, 1000, 100000),
             'total_amount_in_usd' => fake()->randomFloat(2, 1000, 100000),
             'importing_items' => fake()->sentence(),

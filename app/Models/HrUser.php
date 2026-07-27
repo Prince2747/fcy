@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  */
 class HrUser extends Authenticatable
 {
-    use Notifiable, HasFactory;
+    use HasFactory, Notifiable;
 
     protected $connection = 'hr';
 

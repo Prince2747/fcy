@@ -13,7 +13,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Gate;
 
 trait AuthorizesRequests
 {
@@ -23,6 +22,7 @@ trait AuthorizesRequests
 class FcyRequestController extends Controller
 {
     use AuthorizesRequests;
+
     public function index(Request $request): Response
     {
         $user = $request->user();
