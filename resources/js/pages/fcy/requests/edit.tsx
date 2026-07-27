@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, setLayoutProps } from '@inertiajs/react';
 import { ArrowLeft, Save, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +42,8 @@ export default function Edit({ request, customers, currencies, paymentMethods }:
         { title: request.request_number, href: `/fcy/requests/${request.id}` },
         { title: 'Edit', href: `/fcy/requests/${request.id}/edit` },
     ];
+
+    setLayoutProps({ breadcrumbs });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

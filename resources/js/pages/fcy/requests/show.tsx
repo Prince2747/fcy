@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage, setLayoutProps } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle, XCircle, Send, FileText, Clock, FileCheck, FileX, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,8 @@ export default function Show({ request }: ShowProps) {
         { title: request.request_number, href: `/fcy/requests/${request.id}` },
     ];
 
+    setLayoutProps({ breadcrumbs });
+
     function canMakerSubmit(): boolean {
         return isMaker && (request.status === 'draft' || request.status === 'rejected_by_checker');
     }
@@ -67,7 +69,7 @@ export default function Show({ request }: ShowProps) {
         <>
             <Head title={request.request_number} />
 
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6 p-10">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">

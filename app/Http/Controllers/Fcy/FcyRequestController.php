@@ -13,9 +13,16 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Gate;
+
+trait AuthorizesRequests
+{
+    use \Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+}
 
 class FcyRequestController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -79,9 +86,7 @@ class FcyRequestController extends Controller
 
     public function edit(FcyRequest $fcyRequest): Response
     {
-        if (! in_array($fcyRequest->status, [FcyRequest::STATUS_DRAFT, FcyRequest::STATUS_REJECTED_BY_CHECKER])) {
-            abort(403, 'This request cannot be edited in its current status.');
-        }
+        $this->authorize('update', $fcyRequest);
 
         return Inertia::render('fcy/requests/edit', [
             'request' => $fcyRequest->load(['customer', 'currency', 'paymentMethod']),
@@ -93,9 +98,7 @@ class FcyRequestController extends Controller
 
     public function update(UpdateFcyRequest $request, FcyRequest $fcyRequest): RedirectResponse
     {
-        if (! in_array($fcyRequest->status, [FcyRequest::STATUS_DRAFT, FcyRequest::STATUS_REJECTED_BY_CHECKER])) {
-            abort(403, 'This request cannot be edited in its current status.');
-        }
+        $this->authorize('update', $fcyRequest);
 
         $fcyRequest->update($request->validated());
 
@@ -105,15 +108,7 @@ class FcyRequestController extends Controller
 
     public function submit(Request $request, FcyRequest $fcyRequest): RedirectResponse
     {
-        $user = $request->user();
-
-        if ($fcyRequest->status !== FcyRequest::STATUS_DRAFT && $fcyRequest->status !== FcyRequest::STATUS_REJECTED_BY_CHECKER) {
-            abort(403, 'Only draft or checker-rejected requests can be submitted.');
-        }
-
-        if ((string) $user->id !== $fcyRequest->maker_id) {
-            abort(403, 'Only the maker can submit this request.');
-        }
+        $this->authorize('submit', $fcyRequest);
 
         $fcyRequest->update([
             'status' => FcyRequest::STATUS_PENDING_CHECKER,
@@ -126,15 +121,7 @@ class FcyRequestController extends Controller
 
     public function check(Request $request, FcyRequest $fcyRequest): RedirectResponse
     {
-        $user = $request->user();
-
-        if ($fcyRequest->status !== FcyRequest::STATUS_PENDING_CHECKER) {
-            abort(403, 'Request is not pending checker review.');
-        }
-
-        if ((string) $user->id === $fcyRequest->maker_id) {
-            abort(403, 'The checker cannot be the same person as the maker.');
-        }
+        $this->authorize('check', $fcyRequest);
 
         $request->validate([
             'checker_notes' => ['nullable', 'string', 'max:2000'],
@@ -142,7 +129,7 @@ class FcyRequestController extends Controller
 
         $fcyRequest->update([
             'status' => FcyRequest::STATUS_PENDING_APPROVER,
-            'checker_id' => (string) $user->id,
+            'checker_id' => (string) $request->user()->id,
             'checker_notes' => $request->input('checker_notes'),
             'checked_at' => now(),
         ]);
@@ -153,15 +140,7 @@ class FcyRequestController extends Controller
 
     public function rejectCheck(Request $request, FcyRequest $fcyRequest): RedirectResponse
     {
-        $user = $request->user();
-
-        if ($fcyRequest->status !== FcyRequest::STATUS_PENDING_CHECKER) {
-            abort(403, 'Request is not pending checker review.');
-        }
-
-        if ((string) $user->id === $fcyRequest->maker_id) {
-            abort(403, 'The checker cannot be the same person as the maker.');
-        }
+        $this->authorize('rejectCheck', $fcyRequest);
 
         $validated = $request->validate([
             'checker_notes' => ['required', 'string', 'max:2000'],
@@ -169,7 +148,7 @@ class FcyRequestController extends Controller
 
         $fcyRequest->update([
             'status' => FcyRequest::STATUS_REJECTED_BY_CHECKER,
-            'checker_id' => (string) $user->id,
+            'checker_id' => (string) $request->user()->id,
             'checker_notes' => $validated['checker_notes'],
             'checked_at' => now(),
         ]);
@@ -180,11 +159,7 @@ class FcyRequestController extends Controller
 
     public function approve(Request $request, FcyRequest $fcyRequest): RedirectResponse
     {
-        $user = $request->user();
-
-        if ($fcyRequest->status !== FcyRequest::STATUS_PENDING_APPROVER) {
-            abort(403, 'Request is not pending approver review.');
-        }
+        $this->authorize('approve', $fcyRequest);
 
         $request->validate([
             'approver_notes' => ['nullable', 'string', 'max:2000'],
@@ -192,7 +167,7 @@ class FcyRequestController extends Controller
 
         $fcyRequest->update([
             'status' => FcyRequest::STATUS_APPROVED,
-            'approver_id' => (string) $user->id,
+            'approver_id' => (string) $request->user()->id,
             'approver_notes' => $request->input('approver_notes'),
             'approved_at' => now(),
         ]);
@@ -203,11 +178,7 @@ class FcyRequestController extends Controller
 
     public function reject(Request $request, FcyRequest $fcyRequest): RedirectResponse
     {
-        $user = $request->user();
-
-        if ($fcyRequest->status !== FcyRequest::STATUS_PENDING_APPROVER) {
-            abort(403, 'Request is not pending approver review.');
-        }
+        $this->authorize('reject', $fcyRequest);
 
         $validated = $request->validate([
             'approver_notes' => ['required', 'string', 'max:2000'],
@@ -215,7 +186,7 @@ class FcyRequestController extends Controller
 
         $fcyRequest->update([
             'status' => FcyRequest::STATUS_REJECTED_BY_APPROVER,
-            'approver_id' => (string) $user->id,
+            'approver_id' => (string) $request->user()->id,
             'approver_notes' => $validated['approver_notes'],
             'approved_at' => now(),
         ]);

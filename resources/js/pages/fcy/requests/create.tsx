@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, setLayoutProps } from '@inertiajs/react';
 import { ArrowLeft, Save, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +34,8 @@ export default function Create({ customers, currencies, paymentMethods }: Create
         { title: 'FCY Requests', href: '/fcy/requests' },
         { title: 'New Request', href: '/fcy/requests/create' },
     ];
+
+    setLayoutProps({ breadcrumbs });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
