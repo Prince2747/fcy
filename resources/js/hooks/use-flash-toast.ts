@@ -1,36 +1,87 @@
-import { router } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import type { FlashToast } from '@/types/ui';
 
-export function useFlashToast(): void {
-    useEffect(() => {
-        return router.on('flash', (event) => {
-            const flash = (event as CustomEvent).detail?.flash;
+type FlashProps = {
+    flash?: {
+        toast?: FlashToast;
+        success?: string;
+        error?: string;
+        warning?: string;
+        info?: string;
+    };
+};
 
-            // Handle toast notifications
-            const toastData = flash?.toast as FlashToast | undefined;
-            if (toastData) {
-                toast[toastData.type](toastData.message);
+export function useFlashToast(): void {
+    const { flash } = usePage<FlashProps>().props;
+    const lastToast = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!flash) {
+            return;
+        }
+
+        if (flash.toast?.message) {
+            const key = `${flash.toast.type}:${flash.toast.message}`;
+
+            if (lastToast.current === key) {
                 return;
             }
 
-            // Handle standard Laravel flash messages
-            if (flash?.success) {
+            lastToast.current = key;
+
+            toast[flash.toast.type](flash.toast.message);
+
+            return;
+        }
+
+        if (flash.success) {
+            const key = `success:${flash.success}`;
+
+            if (lastToast.current !== key) {
+                lastToast.current = key;
                 toast.success(flash.success);
             }
 
-            if (flash?.error) {
+            return;
+        }
+
+        if (flash.error) {
+            const key = `error:${flash.error}`;
+
+            if (lastToast.current !== key) {
+                lastToast.current = key;
                 toast.error(flash.error);
             }
 
-            if (flash?.warning) {
+            return;
+        }
+
+        if (flash.warning) {
+            const key = `warning:${flash.warning}`;
+
+            if (lastToast.current !== key) {
+                lastToast.current = key;
                 toast.warning(flash.warning);
             }
 
-            if (flash?.info) {
+            return;
+        }
+
+        if (flash.info) {
+            const key = `info:${flash.info}`;
+
+            if (lastToast.current !== key) {
+                lastToast.current = key;
                 toast.info(flash.info);
             }
-        });
-    }, []);
+        }
+    }, [
+        flash?.toast,
+        flash?.success,
+        flash?.error,
+        flash?.warning,
+        flash?.info,
+    ]);
 }
