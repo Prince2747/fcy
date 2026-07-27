@@ -7,13 +7,30 @@ export function useFlashToast(): void {
     useEffect(() => {
         return router.on('flash', (event) => {
             const flash = (event as CustomEvent).detail?.flash;
-            const data = flash?.toast as FlashToast | undefined;
 
-            if (!data) {
+            // Handle toast notifications
+            const toastData = flash?.toast as FlashToast | undefined;
+            if (toastData) {
+                toast[toastData.type](toastData.message);
                 return;
             }
 
-            toast[data.type](data.message);
+            // Handle standard Laravel flash messages
+            if (flash?.success) {
+                toast.success(flash.success);
+            }
+
+            if (flash?.error) {
+                toast.error(flash.error);
+            }
+
+            if (flash?.warning) {
+                toast.warning(flash.warning);
+            }
+
+            if (flash?.info) {
+                toast.info(flash.info);
+            }
         });
     }, []);
 }
