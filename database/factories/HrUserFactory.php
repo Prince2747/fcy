@@ -31,6 +31,9 @@ class HrUserFactory extends Factory
             'middlename' => fake()->firstName(),
             'lastname' => fake()->lastName(),
             'email' => fake()->safeEmail(),
+            'gender' => fake()->randomElement(['M', 'F']),
+            'age' => fake()->numberBetween(18, 65),
+            'birthDate' => fake()->date(),
             'isActive' => 'Y',
         ];
     }

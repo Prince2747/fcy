@@ -45,6 +45,22 @@ class FcyRequestAuthorizationTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_forbidden_inertia_request_returns_toast_redirect(): void
+    {
+        $user = HrUser::factory()->create();
+        $user->roles()->attach(FcyRole::where('name', 'fcychecker')->first());
+        $this->actingAs($user);
+
+        $response = $this->withHeader('X-Inertia', 'true')
+            ->get(route('fcy.requests.create'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('toast', function ($toast) {
+            return $toast['type'] === 'error'
+                && str_contains($toast['message'], 'authorized');
+        });
+    }
+
     public function test_maker_can_edit_own_draft_request(): void
     {
         $maker = HrUser::factory()->create();
@@ -75,6 +91,27 @@ class FcyRequestAuthorizationTest extends TestCase
         $response = $this->get(route('fcy.requests.edit', $request));
 
         $response->assertForbidden();
+    }
+
+    public function test_unauthorized_inertia_edit_returns_toast_redirect(): void
+    {
+        $maker1 = HrUser::factory()->create();
+        $maker1->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        $maker2 = HrUser::factory()->create();
+        $maker2->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        $request = FcyRequest::factory()->create([
+            'maker_id' => (string) $maker1->id,
+            'status' => FcyRequest::STATUS_DRAFT,
+        ]);
+        $this->actingAs($maker2);
+
+        $response = $this->withHeader('X-Inertia', 'true')
+            ->get(route('fcy.requests.edit', $request));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('toast', function ($toast) {
+            return $toast['type'] === 'error';
+        });
     }
 
     public function test_maker_can_submit_own_draft_request(): void
@@ -129,6 +166,28 @@ class FcyRequestAuthorizationTest extends TestCase
         ]);
 
         $response->assertForbidden();
+    }
+
+    public function test_unauthorized_inertia_check_returns_toast_redirect(): void
+    {
+        $maker = HrUser::factory()->create();
+        $maker->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        $maker->roles()->attach(FcyRole::where('name', 'fcychecker')->first());
+        $request = FcyRequest::factory()->create([
+            'maker_id' => (string) $maker->id,
+            'status' => FcyRequest::STATUS_PENDING_CHECKER,
+        ]);
+        $this->actingAs($maker);
+
+        $response = $this->withHeader('X-Inertia', 'true')
+            ->post(route('fcy.requests.check', $request), [
+                'checker_notes' => 'Looks good',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('toast', function ($toast) {
+            return $toast['type'] === 'error';
+        });
     }
 
     public function test_approver_can_approve_pending_request(): void
@@ -189,5 +248,26 @@ class FcyRequestAuthorizationTest extends TestCase
         ]);
 
         $response->assertForbidden();
+    }
+
+    public function test_unauthorized_inertia_approve_returns_toast_redirect(): void
+    {
+        $maker = HrUser::factory()->create();
+        $maker->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        $request = FcyRequest::factory()->create([
+            'maker_id' => (string) $maker->id,
+            'status' => FcyRequest::STATUS_PENDING_APPROVER,
+        ]);
+        $this->actingAs($maker);
+
+        $response = $this->withHeader('X-Inertia', 'true')
+            ->post(route('fcy.requests.approve', $request), [
+                'approver_notes' => 'Approved',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('toast', function ($toast) {
+            return $toast['type'] === 'error';
+        });
     }
 }

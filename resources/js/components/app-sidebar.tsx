@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FileText, FolderGit2, LayoutDashboard, UserPlus } from 'lucide-react';
+import { BookOpen, CreditCard, DollarSign, FileText, FolderGit2, LayoutDashboard, UserPlus } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -31,6 +31,16 @@ const mainNavItems: NavItem[] = [
         title: 'FCY Requests',
         href: fcy.requests.index(),
         icon: FileText,
+    },
+    {
+        title: 'Currencies',
+        href: '/fcy/settings/currencies',
+        icon: DollarSign,
+    },
+    {
+        title: 'Payment Methods',
+        href: '/fcy/settings/payment-methods',
+        icon: CreditCard,
     },
 ];
 

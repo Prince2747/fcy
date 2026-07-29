@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Fcy\CurrencyController;
 use App\Http\Controllers\Fcy\CustomerController;
 use App\Http\Controllers\Fcy\DashboardController;
 use App\Http\Controllers\Fcy\FcyRequestController;
+use App\Http\Controllers\Fcy\PaymentMethodController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +32,25 @@ Route::middleware(['auth'])->group(function () {
         // FCY Requests
         Route::resource('requests', FcyRequestController::class)
             ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+
+        // Settings
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::resource('currencies', CurrencyController::class)
+                ->only(['index', 'store', 'update'])
+                ->names([
+                    'index' => 'currencies.index',
+                    'store' => 'currencies.store',
+                    'update' => 'currencies.update',
+                ]);
+
+            Route::resource('payment-methods', PaymentMethodController::class)
+                ->only(['index', 'store', 'update'])
+                ->names([
+                    'index' => 'payment-methods.index',
+                    'store' => 'payment-methods.store',
+                    'update' => 'payment-methods.update',
+                ]);
+        });
 
         // Workflow actions
         Route::post('requests/{fcy_request}/submit', [FcyRequestController::class, 'submit'])->name('requests.submit');

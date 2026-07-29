@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\HrUser;
 use Closure;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -29,6 +30,8 @@ class CheckFcyRole
             }
         }
 
-        abort(403, 'Unauthorized. You do not have the required FCY role.');
+        throw new AuthorizationException(
+            'You do not have the required role to access this page.'
+        );
     }
 }
