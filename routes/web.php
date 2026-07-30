@@ -5,6 +5,7 @@ use App\Http\Controllers\Fcy\CustomerController;
 use App\Http\Controllers\Fcy\DashboardController;
 use App\Http\Controllers\Fcy\FcyRequestController;
 use App\Http\Controllers\Fcy\PaymentMethodController;
+use App\Http\Controllers\Fcy\ReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,9 +30,13 @@ Route::middleware(['auth'])->group(function () {
                 'destroy' => 'customers.destroy',
             ]);
 
+        // Customer activation
+        Route::patch('customers/{customer}/activate', [CustomerController::class, 'activate'])->name('customers.activate');
+
         // FCY Requests
         Route::resource('requests', FcyRequestController::class)
-            ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+            ->only(['index', 'create', 'store', 'show', 'edit', 'update'])
+            ->parameters(['requests' => 'fcyRequest']);
 
         // Settings
         Route::prefix('settings')->name('settings.')->group(function () {
@@ -58,5 +63,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('requests/{fcy_request}/reject-check', [FcyRequestController::class, 'rejectCheck'])->name('requests.reject-check');
         Route::post('requests/{fcy_request}/approve', [FcyRequestController::class, 'approve'])->name('requests.approve');
         Route::post('requests/{fcy_request}/reject', [FcyRequestController::class, 'reject'])->name('requests.reject');
+
+        // Reports
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
     });
 });

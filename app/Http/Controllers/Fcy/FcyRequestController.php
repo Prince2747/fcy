@@ -9,6 +9,7 @@ use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\FcyRequest;
 use App\Models\PaymentMethod;
+use App\Models\Workunit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -57,6 +58,7 @@ class FcyRequestController extends Controller
             'customers' => Customer::orderBy('importer_name')->get(),
             'currencies' => Currency::orderBy('code')->get(),
             'paymentMethods' => PaymentMethod::orderBy('name')->get(),
+            'branches' => $this->getBranches(),
         ]);
     }
 
@@ -75,12 +77,13 @@ class FcyRequestController extends Controller
             ->with('success', 'FCY request created successfully.');
     }
 
-    public function show(FcyRequest $fcyRequest): Response
+    public function show(Request $request, FcyRequest $fcyRequest): Response
     {
         $fcyRequest->load(['customer', 'currency', 'paymentMethod']);
 
         return Inertia::render('fcy/requests/show', [
             'request' => $fcyRequest,
+            'userRoles' => $request->user()->getFcyRoles(),
         ]);
     }
 
@@ -93,7 +96,22 @@ class FcyRequestController extends Controller
             'customers' => Customer::orderBy('importer_name')->get(),
             'currencies' => Currency::orderBy('code')->get(),
             'paymentMethods' => PaymentMethod::orderBy('name')->get(),
+            'branches' => $this->getBranches(),
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getBranches(): array
+    {
+        return Workunit::query()
+            ->where('prefix', 'branch')
+            ->whereNotNull('name')
+            ->orderBy('name')
+            ->pluck('name')
+            ->values()
+            ->toArray();
     }
 
     public function update(UpdateFcyRequest $request, FcyRequest $fcyRequest): RedirectResponse

@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import fcy from '@/routes/fcy';
-import { Plus, Search, Eye, Pencil, Ban, Building2, Users, SlidersHorizontal, Calendar, BadgeInfo, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Ban, Building2, Users, SlidersHorizontal, Calendar, BadgeInfo, CheckCircle, AlertTriangle, Power } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
@@ -401,7 +401,22 @@ export default function CustomersIndex({ customers, branches, filters }: Custome
                                                                     <span className="sr-only">Deactivate</span>
                                                                 </Button>
                                                             ) : (
-                                                                <div className="w-8 h-8" />
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-colors button-press"
+                                                                    onClick={() => {
+                                                                        router.patch(fcy.customers.activate({ customer: customer.id }).url, {}, {
+                                                                            preserveState: true,
+                                                                            onSuccess: () => {
+                                                                                toast.success(`Customer '${customer.importer_name}' activated successfully.`);
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    <Power className="h-3.5 w-3.5" />
+                                                                    <span className="sr-only">Activate</span>
+                                                                </Button>
                                                             )}
                                                         </div>
                                                     </TableCell>

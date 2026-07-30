@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage, setLayoutProps } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle, XCircle, Send, FileText, Clock, FileCheck, FileX, Building2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Send, FileText, Clock, FileCheck, FileX, Building2, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import fcy from '@/routes/fcy';
 
 interface ShowProps {
     request: FcyRequest;
+    userRoles: string[];
 }
 
 const statusConfig: Record<FcyRequestStatus, { label: string; icon: React.ElementType; color: string }> = {
@@ -23,13 +24,15 @@ const statusConfig: Record<FcyRequestStatus, { label: string; icon: React.Elemen
     rejected_by_approver: { label: 'Rejected by Approver', icon: XCircle, color: 'bg-red-700/10 text-red-800 dark:text-red-500 border-red-700/20' },
 };
 
-export default function Show({ request }: ShowProps) {
+export default function Show({ request, userRoles }: ShowProps) {
     const { auth } = usePage().props as { auth: { user: { id: number | string; name: string } } };
     const user = auth.user;
     const [notes, setNotes] = useState('');
 
-    const StatusIcon = statusConfig[request.status].icon;
+    const statusKey = request.status && statusConfig[request.status] ? request.status : 'draft';
+    const StatusIcon = statusConfig[statusKey].icon;
     const isMaker = String(user.id) === request.maker_id;
+    const canEdit = isMaker && (request.status === 'draft' || request.status === 'rejected_by_checker');
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -44,11 +47,11 @@ export default function Show({ request }: ShowProps) {
     }
 
     function canCheckerAct(): boolean {
-        return request.status === 'pending_checker' && !isMaker;
+        return request.status === 'pending_checker' && !isMaker && userRoles.includes('fcychecker');
     }
 
     function canApproverAct(): boolean {
-        return request.status === 'pending_approver';
+        return request.status === 'pending_approver' && userRoles.includes('fcyapprover');
     }
 
     function handleAction(action: string) {
@@ -83,9 +86,9 @@ export default function Show({ request }: ShowProps) {
                                 <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white font-mono">
                                     {request.request_number}
                                 </h1>
-                                <Badge className={`inline-flex items-center gap-1.5 font-medium px-2.5 py-1 ${statusConfig[request.status].color}`}>
+                                <Badge className={`inline-flex items-center gap-1.5 font-medium px-2.5 py-1 ${statusConfig[statusKey].color}`}>
                                     <StatusIcon className="h-3.5 w-3.5" />
-                                    {statusConfig[request.status].label}
+                                    {statusConfig[statusKey].label}
                                 </Badge>
                             </div>
                             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
@@ -93,6 +96,14 @@ export default function Show({ request }: ShowProps) {
                             </p>
                         </div>
                     </div>
+                    {canEdit && (
+                        <Link href={fcy.requests.edit({ fcyRequest: request.id }).url}>
+                            <Button variant="outline" className="gap-2">
+                                <Pencil className="h-4 w-4" />
+                                Edit Request
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Request Details */}

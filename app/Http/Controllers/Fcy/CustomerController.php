@@ -62,7 +62,7 @@ class CustomerController extends Controller
     /**
      * Store a newly created customer.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validate([
             'branch' => ['required', 'string', 'max:255'],
@@ -76,8 +76,12 @@ class CustomerController extends Controller
             'status' => 'active',
         ]);
 
-        return redirect()->route('fcy.customers.index')
-            ->with('success', "Customer '{$customer->importer_name}' registered successfully.");
+        // Return JSON response for modal submission (no navigation)
+        return response()->json([
+            'success' => true,
+            'customer' => $customer,
+            'message' => "Customer '{$customer->importer_name}' registered successfully.",
+        ]);
     }
 
     /**
@@ -117,5 +121,16 @@ class CustomerController extends Controller
 
         return redirect()->route('fcy.customers.index')
             ->with('success', "Customer '{$customer->importer_name}' deactivated successfully.");
+    }
+
+    /**
+     * Activate the specified customer.
+     */
+    public function activate(Customer $customer): RedirectResponse
+    {
+        $customer->update(['status' => 'active']);
+
+        return redirect()->route('fcy.customers.index')
+            ->with('success', "Customer '{$customer->importer_name}' activated successfully.");
     }
 }

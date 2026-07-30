@@ -1,21 +1,32 @@
-import { Head, Link, useForm, setLayoutProps } from '@inertiajs/react';
-import { ArrowLeft, Save, Send } from 'lucide-react';
+import { Head, Link, useForm, setLayoutProps, router } from '@inertiajs/react';
+import { ArrowLeft, Save, Send, UserPlus } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import fcy from '@/routes/fcy';
-import type { Currency, Customer, FcyRequestFormData, PaymentMethod } from '@/types';
+import type { Currency, Customer, CustomerFormData, FcyRequestFormData, PaymentMethod } from '@/types';
 import { type BreadcrumbItem } from '@/types';
 
 interface CreateProps {
     customers: Customer[];
     currencies: Currency[];
     paymentMethods: PaymentMethod[];
+    branches: string[];
 }
 
-export default function Create({ customers, currencies, paymentMethods }: CreateProps) {
+export default function Create({ customers, currencies, paymentMethods, branches }: CreateProps) {
     const { data, setData, post, processing, errors } = useForm<FcyRequestFormData>({
         customer_id: '',
         proforma_invoice_number: '',
@@ -28,6 +39,7 @@ export default function Create({ customers, currencies, paymentMethods }: Create
         supplier_country: '',
         maker_notes: '',
     });
+    const [customerModalOpen, setCustomerModalOpen] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -74,21 +86,32 @@ export default function Create({ customers, currencies, paymentMethods }: Create
                             <CardContent className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="customer_id">Customer *</Label>
-                                    <Select
-                                        value={data.customer_id.toString()}
-                                        onValueChange={(value) => setData('customer_id', Number(value))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a customer" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {customers.map((customer) => (
-                                                <SelectItem key={customer.id} value={customer.id.toString()}>
-                                                    {customer.importer_name} - {customer.nbe_account_no}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex gap-2">
+                                        <Select
+                                            value={data.customer_id.toString()}
+                                            onValueChange={(value) => setData('customer_id', Number(value))}
+                                        >
+                                            <SelectTrigger className="flex-1">
+                                                <SelectValue placeholder="Select a customer" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {customers.map((customer) => (
+                                                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                                                        {customer.importer_name} - {customer.nbe_account_no}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setCustomerModalOpen(true)}
+                                            className="gap-2 shrink-0"
+                                        >
+                                            <UserPlus className="h-4 w-4" />
+                                            New
+                                        </Button>
+                                    </div>
                                     {errors.customer_id && (
                                         <p className="text-sm text-red-500">{errors.customer_id}</p>
                                     )}
@@ -269,6 +292,160 @@ export default function Create({ customers, currencies, paymentMethods }: Create
                     </div>
                 </form>
             </div>
+
+            {/* Customer Creation Modal */}
+            <Dialog open={customerModalOpen} onOpenChange={setCustomerModalOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-lg font-bold text-zinc-900 dark:text-white">
+                            <UserPlus className="h-5 w-5 text-red-500" />
+                            Register New Customer
+                        </DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Register a new customer to select them for this request.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <InlineCustomerForm
+                        branches={branches}
+                        onSuccess={(newCustomerId) => {
+                            setCustomerModalOpen(false);
+                            setData('customer_id', newCustomerId);
+                            router.reload({ only: ['customers'] });
+                        }}
+                        onCancel={() => setCustomerModalOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
         </>
+    );
+}
+
+function InlineCustomerForm({
+    branches,
+    onSuccess,
+    onCancel,
+}: {
+    branches: string[];
+    onSuccess: (customerId: number) => void;
+    onCancel: () => void;
+}) {
+    const { data, setData, post, processing, errors, reset } = useForm<CustomerFormData>({
+        branch: '',
+        importer_name: '',
+        nbe_account_no: '',
+        tin_number: '',
+    });
+
+    function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        
+        fetch(fcy.customers.store().url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(async (response) => {
+            const result = await response.json();
+            if (result.success && result.customer) {
+                reset();
+                toast.success(result.message || `Customer '${result.customer.importer_name}' registered successfully.`);
+                onSuccess(result.customer.id);
+            } else {
+                throw new Error('Failed to create customer');
+            }
+        })
+        .catch((error) => {
+            console.error('Error creating customer:', error);
+            toast.error('Failed to create customer. Please try again.');
+        });
+    }
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div className="grid gap-5 py-5">
+                <div className="grid gap-5 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="inline-branch" className="text-xs font-semibold text-zinc-600 dark:text-zinc-350 after:content-['*'] after:ml-0.5 after:text-red-500">
+                            Branch
+                        </Label>
+                        <Select value={data.branch} onValueChange={(value) => setData('branch', value)}>
+                            <SelectTrigger id="inline-branch" className={`h-10 bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 ${errors.branch ? 'border-red-500' : ''}`}>
+                                <SelectValue placeholder="Select branch..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {branches.map((branch) => (
+                                    <SelectItem key={branch} value={branch}>
+                                        {branch}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.branch && <p className="text-xs text-red-500 font-medium">{errors.branch}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="inline-name" className="text-xs font-semibold text-zinc-600 dark:text-zinc-350 after:content-['*'] after:ml-0.5 after:text-red-500">
+                            Importer Name
+                        </Label>
+                        <Input
+                            id="inline-name"
+                            placeholder="Enter official registered name"
+                            value={data.importer_name}
+                            onChange={(e) => setData('importer_name', e.target.value)}
+                            className={`h-10 bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 ${errors.importer_name ? 'border-red-500' : ''}`}
+                        />
+                        {errors.importer_name && <p className="text-xs text-red-500 font-medium">{errors.importer_name}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="inline-nbe" className="text-xs font-semibold text-zinc-600 dark:text-zinc-350 after:content-['*'] after:ml-0.5 after:text-red-500">
+                            NBE ACC. NO
+                        </Label>
+                        <Input
+                            id="inline-nbe"
+                            placeholder="e.g., NBE-001234"
+                            value={data.nbe_account_no}
+                            onChange={(e) => setData('nbe_account_no', e.target.value)}
+                            className={`h-10 font-mono text-sm bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 ${errors.nbe_account_no ? 'border-red-500' : ''}`}
+                        />
+                        {errors.nbe_account_no && <p className="text-xs text-red-500 font-medium">{errors.nbe_account_no}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="inline-tin" className="text-xs font-semibold text-zinc-600 dark:text-zinc-350 after:content-['*'] after:ml-0.5 after:text-red-500">
+                            TIN Number
+                        </Label>
+                        <Input
+                            id="inline-tin"
+                            placeholder="e.g., 1234-5678-9012"
+                            value={data.tin_number}
+                            onChange={(e) => setData('tin_number', e.target.value)}
+                            className={`h-10 font-mono text-sm bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 ${errors.tin_number ? 'border-red-500' : ''}`}
+                        />
+                        {errors.tin_number && <p className="text-xs text-red-500 font-medium">{errors.tin_number}</p>}
+                    </div>
+                </div>
+
+                {errors.nbe_account_no?.includes('already') || errors.tin_number?.includes('already') ? (
+                    <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-500/[0.04] p-4 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-3">
+                        <span className="font-semibold block mb-0.5">Duplicate Registration Detected</span>
+                        A customer with this NBE account number or TIN number already exists.
+                    </div>
+                ) : null}
+            </div>
+
+            <DialogFooter className="border-t border-zinc-100 dark:border-zinc-900 pt-4 mt-2">
+                <Button type="button" variant="outline" onClick={onCancel} className="h-9 border-zinc-200 dark:border-zinc-800">
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={processing} className="h-9 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold">
+                    {processing ? 'Registering...' : 'Register Customer'}
+                </Button>
+            </DialogFooter>
+        </form>
     );
 }
