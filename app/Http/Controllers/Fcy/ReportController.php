@@ -7,6 +7,7 @@ use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\FcyRequest;
 use App\Models\PaymentMethod;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -89,6 +90,85 @@ class ReportController extends Controller
     }
 
     /**
+     * Build the row data for export from a single FcyRequest.
+     *
+     * @return list<string>
+     */
+    private function buildRow(FcyRequest $req, int $serialNumber): array
+    {
+        return [
+            (string) $serialNumber,
+            $req->request_number,
+            $this->financialYear($req->created_at),
+            $req->created_at?->format('Y-m-d') ?? 'N/A',
+            $req->customer?->branch ?? 'N/A',
+            $req->customer?->importer_name ?? 'N/A',
+            $req->customer?->nbe_account_no ?? 'N/A',
+            $req->customer?->tin_number ?? 'N/A',
+            $req->proforma_invoice_number,
+            $req->proforma_invoice_date instanceof Carbon
+                ? $req->proforma_invoice_date->format('Y-m-d')
+                : (string) $req->proforma_invoice_date,
+            $req->paymentMethod?->name ?? 'N/A',
+            $req->currency?->code ?? 'N/A',
+            (string) $req->fcy_amount_requested,
+            (string) $req->total_amount_in_usd,
+            $req->importing_items,
+            $req->supplier_country,
+            $req->approved_at?->format('Y-m-d') ?? 'N/A',
+        ];
+    }
+
+    /**
+     * Get the export column headers.
+     *
+     * @return list<string>
+     */
+    private function exportHeaders(): array
+    {
+        return [
+            'S.NO.',
+            'FOREIGN CURRENCY REQUEST QUEUE NUMBER',
+            'FINANCIAL YEAR',
+            'APPLICATION DATE',
+            'BRANCH OF THE IMPORTER',
+            'NAME OF THE IMPORTER',
+            'NBE ACC.NO',
+            'TIN NUMBER',
+            'PROFORMA INVOICE NUMBER',
+            'PROFORMA INVOICE DATE',
+            'METHOD OF PAYMENT',
+            'FCY TYPE',
+            'FCY AMOUNT REQUESTED',
+            'TOTAL AMOUNT IN USD',
+            'IMPORTING ITEMS',
+            'SUPPLIER COUNTRY',
+            'APPROVAL DATE',
+        ];
+    }
+
+    /**
+     * Calculate the Ethiopian financial year (July 1 – June 30).
+     * Returns a string like "2024/2025".
+     */
+    private function financialYear(?CarbonInterface $date): string
+    {
+        if ($date === null) {
+            return 'N/A';
+        }
+
+        $year = (int) $date->year;
+        $month = (int) $date->month;
+
+        // Ethiopian financial year starts July (month 7)
+        if ($month >= 7) {
+            return "{$year}/".($year + 1);
+        }
+
+        return ($year - 1)."/{$year}";
+    }
+
+    /**
      * @param  Collection<int, FcyRequest>  $requests
      */
     private function exportCsv($requests, string $filename): StreamedResponse
@@ -104,42 +184,12 @@ class ReportController extends Controller
             // Add BOM for Excel UTF-8 compatibility
             fwrite($handle, "\xEF\xBB\xBF");
 
-            fputcsv($handle, [
-                'Request Number',
-                'Customer Name',
-                'Branch',
-                'NBE Account No',
-                'Proforma Invoice Number',
-                'Proforma Invoice Date',
-                'Payment Method',
-                'Currency',
-                'FCY Amount Requested',
-                'Total Amount (USD)',
-                'Supplier Country',
-                'Importing Items',
-                'Status',
-                'Created At',
-            ]);
+            fputcsv($handle, $this->exportHeaders());
 
+            $serialNumber = 1;
             foreach ($requests as $req) {
-                fputcsv($handle, [
-                    $req->request_number,
-                    $req->customer?->importer_name ?? 'N/A',
-                    $req->customer?->branch ?? 'N/A',
-                    $req->customer?->nbe_account_no ?? 'N/A',
-                    $req->proforma_invoice_number,
-                    $req->proforma_invoice_date instanceof Carbon
-                        ? $req->proforma_invoice_date->format('Y-m-d')
-                        : $req->proforma_invoice_date,
-                    $req->paymentMethod?->code ?? $req->paymentMethod?->name ?? 'N/A',
-                    $req->currency?->code ?? 'N/A',
-                    $req->fcy_amount_requested,
-                    $req->total_amount_in_usd,
-                    $req->supplier_country,
-                    $req->importing_items,
-                    ucfirst(str_replace('_', ' ', $req->status)),
-                    $req->created_at?->format('Y-m-d H:i:s'),
-                ]);
+                fputcsv($handle, $this->buildRow($req, $serialNumber));
+                $serialNumber++;
             }
 
             fclose($handle);
@@ -162,42 +212,12 @@ class ReportController extends Controller
             $rows = [];
 
             // Header row
-            $rows[] = [
-                'Request Number',
-                'Customer Name',
-                'Branch',
-                'NBE Account No',
-                'Proforma Invoice Number',
-                'Proforma Invoice Date',
-                'Payment Method',
-                'Currency',
-                'FCY Amount Requested',
-                'Total Amount (USD)',
-                'Supplier Country',
-                'Importing Items',
-                'Status',
-                'Created At',
-            ];
+            $rows[] = $this->exportHeaders();
 
+            $serialNumber = 1;
             foreach ($requests as $req) {
-                $rows[] = [
-                    $req->request_number,
-                    $req->customer?->importer_name ?? 'N/A',
-                    $req->customer?->branch ?? 'N/A',
-                    $req->customer?->nbe_account_no ?? 'N/A',
-                    $req->proforma_invoice_number,
-                    $req->proforma_invoice_date instanceof Carbon
-                        ? $req->proforma_invoice_date->format('Y-m-d')
-                        : $req->proforma_invoice_date,
-                    $req->paymentMethod?->code ?? $req->paymentMethod?->name ?? 'N/A',
-                    $req->currency?->code ?? 'N/A',
-                    $req->fcy_amount_requested,
-                    $req->total_amount_in_usd,
-                    $req->supplier_country,
-                    $req->importing_items,
-                    ucfirst(str_replace('_', ' ', $req->status)),
-                    $req->created_at?->format('Y-m-d H:i:s'),
-                ];
+                $rows[] = $this->buildRow($req, $serialNumber);
+                $serialNumber++;
             }
 
             echo $this->buildExcelXml($rows);
@@ -247,6 +267,6 @@ class ReportController extends Controller
 
     private function escapeXml(string $value): string
     {
-        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 }

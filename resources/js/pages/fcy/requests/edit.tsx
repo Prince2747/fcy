@@ -1,6 +1,7 @@
 import { Head, Link, useForm, setLayoutProps, router } from '@inertiajs/react';
 import { ArrowLeft, Save, Send, UserPlus } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -25,6 +26,7 @@ interface EditProps {
     currencies: Currency[];
     paymentMethods: PaymentMethod[];
     branches: string[];
+    countries: string[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -32,7 +34,7 @@ const statusLabels: Record<string, string> = {
     rejected_by_checker: 'Rejected by Checker',
 };
 
-export default function Edit({ request, customers, currencies, paymentMethods, branches }: EditProps) {
+export default function Edit({ request, customers, currencies, paymentMethods, branches, countries }: EditProps) {
     const { data, setData, put, processing, errors } = useForm<FcyRequestFormData>({
         customer_id: request.customer_id,
         proforma_invoice_number: request.proforma_invoice_number,
@@ -126,11 +128,21 @@ export default function Edit({ request, customers, currencies, paymentMethods, b
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="supplier_country">Supplier Country *</Label>
-                                    <Input
-                                        id="supplier_country"
+                                    <Select
                                         value={data.supplier_country}
-                                        onChange={(e) => setData('supplier_country', e.target.value)}
-                                    />
+                                        onValueChange={(value) => setData('supplier_country', value)}
+                                    >
+                                        <SelectTrigger id="supplier_country">
+                                            <SelectValue placeholder="Select supplier country" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {countries.map((country) => (
+                                                <SelectItem key={country} value={country}>
+                                                    {country}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     {errors.supplier_country && <p className="text-sm text-red-500">{errors.supplier_country}</p>}
                                 </div>
                             </CardContent>
@@ -296,7 +308,7 @@ function InlineCustomerForm({
     onSuccess: (customerId: number) => void;
     onCancel: () => void;
 }) {
-    const { data, setData, post, processing, errors, reset } = useForm<CustomerFormData>({
+    const { data, setData, processing, errors, reset } = useForm<CustomerFormData>({
         branch: '',
         importer_name: '',
         nbe_account_no: '',
@@ -305,18 +317,29 @@ function InlineCustomerForm({
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(fcy.customers.store().url, {
-            onSuccess: (page) => {
-                reset();
-                const newCustomer = (page.props as { customers?: Customer[] })?.customers?.find(
-                    (c) => c.nbe_account_no === data.nbe_account_no,
-                );
-                if (newCustomer) {
-                    onSuccess(newCustomer.id);
-                } else {
-                    onSuccess(0);
-                }
+
+        fetch(fcy.customers.store().url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
             },
+            body: JSON.stringify(data),
+        })
+        .then(async (response) => {
+            const result = await response.json();
+            if (result.success && result.customer) {
+                reset();
+                toast.success(result.message || `Customer '${result.customer.importer_name}' registered successfully.`);
+                onSuccess(result.customer.id);
+            } else {
+                throw new Error('Failed to create customer');
+            }
+        })
+        .catch((error) => {
+            console.error('Error creating customer:', error);
+            toast.error('Failed to create customer. Please try again.');
         });
     }
 

@@ -77,3 +77,24 @@ export type FcyRequestFormData = {
     supplier_country: string;
     maker_notes: string;
 };
+
+export type NotificationType = 'info' | 'success' | 'warning' | 'error';
+
+export type NotificationData = {
+    type: NotificationType;
+    title: string;
+    message: string;
+    request_id: number;
+    request_number: string;
+};
+
+export type AppNotification = {
+    id: string;
+    type: string;
+    notifiable_type: string;
+    notifiable_id: number;
+    data: NotificationData;
+    read_at: string | null;
+    created_at: string;
+    updated_at: string;
+};

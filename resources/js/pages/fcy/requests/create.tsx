@@ -24,9 +24,10 @@ interface CreateProps {
     currencies: Currency[];
     paymentMethods: PaymentMethod[];
     branches: string[];
+    countries: string[];
 }
 
-export default function Create({ customers, currencies, paymentMethods, branches }: CreateProps) {
+export default function Create({ customers, currencies, paymentMethods, branches, countries }: CreateProps) {
     const { data, setData, post, processing, errors } = useForm<FcyRequestFormData>({
         customer_id: '',
         proforma_invoice_number: '',
@@ -118,12 +119,21 @@ export default function Create({ customers, currencies, paymentMethods, branches
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="supplier_country">Supplier Country *</Label>
-                                    <Input
-                                        id="supplier_country"
+                                    <Select
                                         value={data.supplier_country}
-                                        onChange={(e) => setData('supplier_country', e.target.value)}
-                                        placeholder="Enter supplier country"
-                                    />
+                                        onValueChange={(value) => setData('supplier_country', value)}
+                                    >
+                                        <SelectTrigger id="supplier_country">
+                                            <SelectValue placeholder="Select supplier country" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {countries.map((country) => (
+                                                <SelectItem key={country} value={country}>
+                                                    {country}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     {errors.supplier_country && (
                                         <p className="text-sm text-red-500">{errors.supplier_country}</p>
                                     )}

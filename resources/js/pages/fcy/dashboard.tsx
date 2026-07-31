@@ -151,53 +151,61 @@ export default function Dashboard({
                 </div>
 
                 {/* Stats Cards - Customer Stats */}
-                <div className="grid gap-5 md:grid-cols-3">
-                    <Card className="group relative overflow-hidden border border-zinc-200/80 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-red-500/40 hover:shadow-lg dark:border-zinc-800/80 dark:bg-zinc-900/50 dark:hover:border-red-500/40">
-                        <CardHeader className="flex flex-row items-center justify-between px-4 pt-3.5 pb-1">
-                            <CardTitle className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
-                                Total Importers
-                            </CardTitle>
-                            <div className="rounded-lg border border-red-100 bg-red-50 p-1.5 text-red-600 transition-transform duration-200 group-hover:scale-110 dark:border-red-900/30 dark:bg-red-950/50 dark:text-red-400">
-                                <Users className="h-3.5 w-3.5" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="px-4 pt-1 pb-3.5">
-                            <div className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                                {stats.total}
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="group relative overflow-hidden border border-zinc-200/80 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-red-500/40 hover:shadow-lg dark:border-zinc-800/80 dark:bg-zinc-900/50 dark:hover:border-red-500/40">
-                        <CardHeader className="flex flex-row items-center justify-between px-4 pt-3.5 pb-1">
-                            <CardTitle className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
-                                Total Requests
-                            </CardTitle>
-                            <div className="rounded-lg border border-red-100 bg-red-50 p-1.5 text-red-600 transition-transform duration-200 group-hover:scale-110 dark:border-red-900/30 dark:bg-red-950/50 dark:text-red-400">
-                                <FileText className="h-3.5 w-3.5" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="px-4 pt-1 pb-3.5">
-                            <div className="text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">
-                                {requestStats.total}
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="group relative overflow-hidden border border-zinc-200/80 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-red-500/40 hover:shadow-lg dark:border-zinc-800/80 dark:bg-zinc-900/50 dark:hover:border-red-500/40">
-                        <CardHeader className="flex flex-row items-center justify-between px-4 pt-3.5 pb-1">
-                            <CardTitle className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
-                                New This Month
-                            </CardTitle>
-                            <div className="rounded-lg border border-red-100 bg-red-50 p-1.5 text-red-600 transition-transform duration-200 group-hover:scale-110 dark:border-red-900/30 dark:bg-red-950/50 dark:text-red-400">
-                                <CalendarDays className="h-3.5 w-3.5" />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="px-4 pt-1 pb-3.5">
-                            <div className="text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">
-                                {stats.newThisMonth}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                
+<div className="grid gap-5 md:grid-cols-3">
+    {/* Total Importers */}
+    <Card className="group relative overflow-hidden border border-blue-200/80 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-500/40 hover:shadow-lg dark:border-blue-900/50 dark:bg-zinc-900/50 dark:hover:border-blue-500/40">
+        <CardHeader className="flex flex-row items-center justify-between px-3 pt-3.5 pb-1">
+            <CardTitle className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
+                Total Importers
+            </CardTitle>
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-1.5 text-blue-600 transition-transform duration-200 group-hover:scale-110 dark:border-blue-900/30 dark:bg-blue-950/50 dark:text-blue-400">
+                <Users className="h-3.5 w-3.5" />
+            </div>
+        </CardHeader>
+        <CardContent className="px-4 pt-1 pb-3.5">
+            <div className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                {stats.total}
+            </div>
+        </CardContent>
+    </Card>
+
+    {/* Total Requests */}
+    <Card className="group relative overflow-hidden border border-purple-200/80 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-purple-500/40 hover:shadow-lg dark:border-purple-900/50 dark:bg-zinc-900/50 dark:hover:border-purple-500/40">
+        <CardHeader className="flex flex-row items-center justify-between px-3 pt-3.5 pb-1">
+            <CardTitle className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
+                Total Requests
+            </CardTitle>
+            <div className="rounded-lg border border-purple-100 bg-purple-50 p-1.5 text-purple-600 transition-transform duration-200 group-hover:scale-110 dark:border-purple-900/30 dark:bg-purple-950/50 dark:text-purple-400">
+                <FileText className="h-3.5 w-3.5" />
+            </div>
+        </CardHeader>
+        <CardContent className="px-4 pt-1 pb-3.5">
+            <div className="text-2xl font-bold tracking-tight text-purple-600 dark:text-purple-400">
+                {requestStats.total}
+            </div>
+        </CardContent>
+    </Card>
+
+    {/* New This Month */}
+    <Card className="group relative overflow-hidden border border-emerald-200/80 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg dark:border-emerald-900/50 dark:bg-zinc-900/50 dark:hover:border-emerald-500/40">
+        <CardHeader className="flex flex-row items-center justify-between px-4 pt-3.5 pb-1">
+            <CardTitle className="text-[10px] font-semibold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
+                New This Month
+            </CardTitle>
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-1.5 text-emerald-600 transition-transform duration-200 group-hover:scale-110 dark:border-emerald-900/30 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <CalendarDays className="h-3.5 w-3.5" />
+            </div>
+        </CardHeader>
+        <CardContent className="px-4 pt-1 pb-3.5">
+            <div className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                {stats.newThisMonth}
+            </div>
+        </CardContent>
+    </Card>
+</div>
+
+
 
                 <div className="grid gap-6 md:grid-cols-3">
                     {/* Recent Registrations Card */}

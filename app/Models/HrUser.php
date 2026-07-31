@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -76,6 +78,28 @@ class HrUser extends Authenticatable
             ->whereIn('roles.name', ['fcymaker', 'fcychecker', 'fcyapprover'])
             ->pluck('roles.name')
             ->toArray();
+    }
+
+    /**
+     * Get all users authorized to use the FCY app (any of the 4 roles).
+     *
+     * @return Collection<int, HrUser>
+     */
+    public static function allAuthorizedUsers(): Collection
+    {
+        $authorizedRoleIds = FcyRole::query()
+            ->whereIn('name', ['fcymaker', 'fcychecker', 'fcyapprover', 'SuperAdmin'])
+            ->pluck('id');
+
+        $userIds = DB::connection('hr')
+            ->table('Gadaa-Hr1.dbo.users_roles')
+            ->whereIn('role_id', $authorizedRoleIds)
+            ->pluck('user_id')
+            ->unique();
+
+        return self::query()
+            ->whereIn('id', $userIds)
+            ->get();
     }
 
     protected function casts(): array

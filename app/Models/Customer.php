@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\CustomerFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -41,5 +42,29 @@ class Customer extends Model
         return [
             'status' => 'string',
         ];
+    }
+
+    /**
+     * Normalize an identifier by stripping spaces, dashes, and dots, then uppercasing.
+     */
+    public static function normalizeIdentifier(string $value): string
+    {
+        return strtoupper(preg_replace('/[\s\-\.]/', '', trim($value)));
+    }
+
+    /**
+     * Normalize the NBE account number before saving.
+     */
+    protected function nbeAccountNo(): Attribute
+    {
+        return Attribute::set(fn (?string $value) => ['nbe_account_no' => $value !== null ? self::normalizeIdentifier($value) : null]);
+    }
+
+    /**
+     * Normalize the TIN number before saving.
+     */
+    protected function tinNumber(): Attribute
+    {
+        return Attribute::set(fn (?string $value) => ['tin_number' => $value !== null ? self::normalizeIdentifier($value) : null]);
     }
 }

@@ -31,17 +31,8 @@ class FcyRequestPolicy
             return true;
         }
 
-        // Makers can view their own requests
-        if ($user->hasRole('fcymaker') && (string) $user->id === $fcyRequest->maker_id) {
-            return true;
-        }
-
-        // Checkers and approvers can view all requests
-        if ($user->hasRole('fcychecker') || $user->hasRole('fcyapprover')) {
-            return true;
-        }
-
-        return false;
+        // All FCY users can view any request
+        return $user->hasRole('fcymaker') || $user->hasRole('fcychecker') || $user->hasRole('fcyapprover');
     }
 
     /**
@@ -207,6 +198,6 @@ class FcyRequestPolicy
      */
     private function isSuperAdmin(HrUser $user): bool
     {
-        return $user->hasRole('super_admin');
+        return $user->hasRole('SuperAdmin');
     }
 }

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Fcy;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCustomerRequest;
+use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\Workunit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -62,17 +65,10 @@ class CustomerController extends Controller
     /**
      * Store a newly created customer.
      */
-    public function store(Request $request): \Illuminate\Http\JsonResponse
+    public function store(StoreCustomerRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'branch' => ['required', 'string', 'max:255'],
-            'importer_name' => ['required', 'string', 'max:255'],
-            'nbe_account_no' => ['required', 'string', 'max:255', 'unique:customers,nbe_account_no'],
-            'tin_number' => ['required', 'string', 'max:255', 'unique:customers,tin_number'],
-        ]);
-
         $customer = Customer::create([
-            ...$validated,
+            ...$request->validated(),
             'status' => 'active',
         ]);
 
@@ -97,16 +93,9 @@ class CustomerController extends Controller
     /**
      * Update the specified customer.
      */
-    public function update(Request $request, Customer $customer): RedirectResponse
+    public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
-        $validated = $request->validate([
-            'branch' => ['required', 'string', 'max:255'],
-            'importer_name' => ['required', 'string', 'max:255'],
-            'nbe_account_no' => ['required', 'string', 'max:255', 'unique:customers,nbe_account_no,'.$customer->id],
-            'tin_number' => ['required', 'string', 'max:255', 'unique:customers,tin_number,'.$customer->id],
-        ]);
-
-        $customer->update($validated);
+        $customer->update($request->validated());
 
         return redirect()->route('fcy.customers.index')
             ->with('success', "Customer '{$customer->importer_name}' updated successfully.");

@@ -630,22 +630,65 @@ function CustomerFormDialog({
     onCancel: () => void;
     branches: string[];
 }) {
-    const { data, setData, post, processing, errors, reset } = useForm<CustomerFormData>({
-        branch: '',
-        importer_name: '',
-        nbe_account_no: '',
-        tin_number: '',
-    });
+    const [branch, setBranch] = useState('');
+    const [importerName, setImporterName] = useState('');
+    const [nbeAccountNo, setNbeAccountNo] = useState('');
+    const [tinNumber, setTinNumber] = useState('');
+    const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(fcy.customers.store().url, {
-            onSuccess: () => {
-                reset();
-                onSuccess();
-            },
-        });
+        setProcessing(true);
+        setErrors({});
+
+        try {
+            const response = await fetch(fcy.customers.store().url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({
+                    branch,
+                    importer_name: importerName,
+                    nbe_account_no: nbeAccountNo,
+                    tin_number: tinNumber,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (data.errors) {
+                    setErrors(
+                        Object.fromEntries(
+                            Object.entries(data.errors).map(([key, messages]) => [key, (messages as string[])[0]]),
+                        ),
+                    );
+                } else {
+                    setErrors({ importer_name: data.message || 'Registration failed.' });
+                }
+                return;
+            }
+
+            toast.success(data.message || 'Customer registered successfully.');
+            setBranch('');
+            setImporterName('');
+            setNbeAccountNo('');
+            setTinNumber('');
+            onSuccess();
+        } catch {
+            setErrors({ importer_name: 'An unexpected error occurred. Please try again.' });
+        } finally {
+            setProcessing(false);
+        }
     }
+
+    const hasDuplicateError =
+        errors.nbe_account_no?.toLowerCase().includes('already') ||
+        errors.tin_number?.toLowerCase().includes('already');
 
     return (
         <form onSubmit={handleSubmit}>
@@ -656,7 +699,7 @@ function CustomerFormDialog({
                         <Label htmlFor="branch" className="text-xs font-semibold text-zinc-600 dark:text-zinc-350 after:content-['*'] after:ml-0.5 after:text-red-500">
                             Branch of the Customer
                         </Label>
-                        <Select value={data.branch} onValueChange={(value) => setData('branch', value)}>
+                        <Select value={branch} onValueChange={(value) => setBranch(value)}>
                             <SelectTrigger id="branch" className={`h-10 bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 focus:ring-2 focus:ring-blue-500/20 ${errors.branch ? 'border-red-500 focus:ring-red-500/20' : ''}`}>
                                 <SelectValue placeholder="Select branch..." />
                             </SelectTrigger>
@@ -681,8 +724,8 @@ function CustomerFormDialog({
                         <Input
                             id="importer_name"
                             placeholder="Enter official registered name"
-                            value={data.importer_name}
-                            onChange={(e) => setData('importer_name', e.target.value)}
+                            value={importerName}
+                            onChange={(e) => setImporterName(e.target.value)}
                             className={`h-10 bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 ${errors.importer_name ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
                         />
                         {errors.importer_name && (
@@ -698,8 +741,8 @@ function CustomerFormDialog({
                         <Input
                             id="nbe_account_no"
                             placeholder="e.g., NBE-001234"
-                            value={data.nbe_account_no}
-                            onChange={(e) => setData('nbe_account_no', e.target.value)}
+                            value={nbeAccountNo}
+                            onChange={(e) => setNbeAccountNo(e.target.value)}
                             className={`h-10 font-mono text-sm bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 ${errors.nbe_account_no ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
                         />
                         {errors.nbe_account_no && (
@@ -715,8 +758,8 @@ function CustomerFormDialog({
                         <Input
                             id="tin_number"
                             placeholder="e.g., 1234-5678-9012"
-                            value={data.tin_number}
-                            onChange={(e) => setData('tin_number', e.target.value)}
+                            value={tinNumber}
+                            onChange={(e) => setTinNumber(e.target.value)}
                             className={`h-10 font-mono text-sm bg-zinc-50/30 dark:bg-zinc-950 border-zinc-250 dark:border-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 ${errors.tin_number ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
                         />
                         {errors.tin_number && (
@@ -726,7 +769,7 @@ function CustomerFormDialog({
                 </div>
 
                 {/* Validation Banner */}
-                {errors.nbe_account_no?.includes('already') || errors.tin_number?.includes('already') ? (
+                {hasDuplicateError ? (
                     <div className="rounded-xl border border-amber-205 dark:border-amber-900/50 bg-amber-500/[0.04] p-4 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-3">
                         <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
                         <div>

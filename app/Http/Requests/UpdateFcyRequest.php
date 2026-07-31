@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\Country;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateFcyRequest extends FormRequest
 {
@@ -25,7 +27,7 @@ class UpdateFcyRequest extends FormRequest
             'fcy_amount_requested' => ['sometimes', 'required', 'numeric', 'min:0.01'],
             'total_amount_in_usd' => ['sometimes', 'required', 'numeric', 'min:0.01'],
             'importing_items' => ['sometimes', 'required', 'string'],
-            'supplier_country' => ['sometimes', 'required', 'string', 'max:255'],
+            'supplier_country' => ['sometimes', 'required', 'string', Rule::in(Country::all())],
             'maker_notes' => ['nullable', 'string', 'max:2000'],
         ];
     }

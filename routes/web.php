@@ -4,8 +4,10 @@ use App\Http\Controllers\Fcy\CurrencyController;
 use App\Http\Controllers\Fcy\CustomerController;
 use App\Http\Controllers\Fcy\DashboardController;
 use App\Http\Controllers\Fcy\FcyRequestController;
+use App\Http\Controllers\Fcy\NotificationController;
 use App\Http\Controllers\Fcy\PaymentMethodController;
 use App\Http\Controllers\Fcy\ReportController;
+use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +68,14 @@ Route::middleware(['auth'])->group(function () {
 
         // Reports
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
+        Route::get('reports/export', [ReportController::class, 'export'])
+            ->name('reports.export')
+            ->withoutMiddleware([HandleInertiaRequests::class]);
+
+        // Notifications
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+        Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
     });
 });

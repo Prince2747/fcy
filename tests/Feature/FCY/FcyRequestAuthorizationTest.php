@@ -270,4 +270,43 @@ class FcyRequestAuthorizationTest extends TestCase
             return $toast['type'] === 'error';
         });
     }
+
+    public function test_maker_can_view_other_makers_request(): void
+    {
+        $maker1 = HrUser::factory()->create();
+        $maker1->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        $maker2 = HrUser::factory()->create();
+        $maker2->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        $request = FcyRequest::factory()->create([
+            'maker_id' => (string) $maker1->id,
+            'status' => FcyRequest::STATUS_DRAFT,
+        ]);
+        $this->actingAs($maker2);
+
+        $response = $this->get(route('fcy.requests.show', $request));
+
+        $response->assertOk();
+    }
+
+    public function test_maker_can_see_all_requests_in_index(): void
+    {
+        $maker1 = HrUser::factory()->create();
+        $maker1->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        $maker2 = HrUser::factory()->create();
+        $maker2->roles()->attach(FcyRole::where('name', 'fcymaker')->first());
+        FcyRequest::factory()->create([
+            'maker_id' => (string) $maker1->id,
+            'status' => FcyRequest::STATUS_DRAFT,
+        ]);
+        FcyRequest::factory()->create([
+            'maker_id' => (string) $maker2->id,
+            'status' => FcyRequest::STATUS_DRAFT,
+        ]);
+        $this->actingAs($maker1);
+
+        $response = $this->get(route('fcy.requests.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page->has('requests.data', 2));
+    }
 }

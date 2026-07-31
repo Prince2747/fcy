@@ -10,6 +10,8 @@ use App\Models\Customer;
 use App\Models\FcyRequest;
 use App\Models\PaymentMethod;
 use App\Models\Workunit;
+use App\Services\NotificationService;
+use App\Support\Country;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,8 +34,22 @@ class FcyRequestController extends Controller
             ->with(['customer', 'currency', 'paymentMethod'])
             ->latest();
 
-        if ($user->hasRole('fcymaker') && ! $user->hasRole('fcychecker') && ! $user->hasRole('fcyapprover')) {
-            $query->where('maker_id', $user->id);
+        // All FCY users can see all requests
+
+        // Search filter
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('request_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($q) use ($search) {
+                        $q->where('importer_name', 'like', "%{$search}%");
+                    })
+                    ->orWhere('fcy_amount_requested', 'like', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
         }
 
         $requests = $query->paginate(15);
@@ -49,6 +65,7 @@ class FcyRequestController extends Controller
             'requests' => $requests,
             'requestStats' => $requestStats,
             'userRoles' => $user->getFcyRoles(),
+            'filters' => $request->only(['search', 'status']),
         ]);
     }
 
@@ -59,6 +76,7 @@ class FcyRequestController extends Controller
             'currencies' => Currency::orderBy('code')->get(),
             'paymentMethods' => PaymentMethod::orderBy('name')->get(),
             'branches' => $this->getBranches(),
+            'countries' => Country::all(),
         ]);
     }
 
@@ -97,6 +115,7 @@ class FcyRequestController extends Controller
             'currencies' => Currency::orderBy('code')->get(),
             'paymentMethods' => PaymentMethod::orderBy('name')->get(),
             'branches' => $this->getBranches(),
+            'countries' => Country::all(),
         ]);
     }
 
@@ -133,6 +152,14 @@ class FcyRequestController extends Controller
             'maker_notes' => $request->input('maker_notes', $fcyRequest->maker_notes),
         ]);
 
+        NotificationService::notifyAllAuthorizedUsers([
+            'type' => 'info',
+            'title' => 'New FCY Request Submitted',
+            'message' => "Request {$fcyRequest->request_number} is pending checker review.",
+            'request_id' => $fcyRequest->id,
+            'request_number' => $fcyRequest->request_number,
+        ]);
+
         return redirect()->route('fcy.requests.show', $fcyRequest)
             ->with('success', 'Request submitted for checker review.');
     }
@@ -150,6 +177,14 @@ class FcyRequestController extends Controller
             'checker_id' => (string) $request->user()->id,
             'checker_notes' => $request->input('checker_notes'),
             'checked_at' => now(),
+        ]);
+
+        NotificationService::notifyAllAuthorizedUsers([
+            'type' => 'info',
+            'title' => 'FCY Request Checked',
+            'message' => "Request {$fcyRequest->request_number} is pending approver review.",
+            'request_id' => $fcyRequest->id,
+            'request_number' => $fcyRequest->request_number,
         ]);
 
         return redirect()->route('fcy.requests.show', $fcyRequest)
@@ -171,6 +206,14 @@ class FcyRequestController extends Controller
             'checked_at' => now(),
         ]);
 
+        NotificationService::notifyAllAuthorizedUsers([
+            'type' => 'warning',
+            'title' => 'FCY Request Returned',
+            'message' => "Request {$fcyRequest->request_number} was returned by the checker for corrections.",
+            'request_id' => $fcyRequest->id,
+            'request_number' => $fcyRequest->request_number,
+        ]);
+
         return redirect()->route('fcy.requests.show', $fcyRequest)
             ->with('success', 'Request rejected and sent back to maker for corrections.');
     }
@@ -190,6 +233,14 @@ class FcyRequestController extends Controller
             'approved_at' => now(),
         ]);
 
+        NotificationService::notifyAllAuthorizedUsers([
+            'type' => 'success',
+            'title' => 'FCY Request Approved',
+            'message' => "Request {$fcyRequest->request_number} has been approved.",
+            'request_id' => $fcyRequest->id,
+            'request_number' => $fcyRequest->request_number,
+        ]);
+
         return redirect()->route('fcy.requests.show', $fcyRequest)
             ->with('success', 'Request approved successfully.');
     }
@@ -207,6 +258,14 @@ class FcyRequestController extends Controller
             'approver_id' => (string) $request->user()->id,
             'approver_notes' => $validated['approver_notes'],
             'approved_at' => now(),
+        ]);
+
+        NotificationService::notifyAllAuthorizedUsers([
+            'type' => 'error',
+            'title' => 'FCY Request Rejected',
+            'message' => "Request {$fcyRequest->request_number} has been rejected by the approver.",
+            'request_id' => $fcyRequest->id,
+            'request_number' => $fcyRequest->request_number,
         ]);
 
         return redirect()->route('fcy.requests.show', $fcyRequest)

@@ -136,6 +136,31 @@ class FcyRequestPolicyTest extends TestCase
         $this->assertTrue($policy->approve($superAdmin, $request));
     }
 
+    public function test_maker_can_view_other_makers_request(): void
+    {
+        $maker1 = $this->createMockUser('fcymaker', 1);
+        $maker2 = $this->createMockUser('fcymaker', 2);
+        $request = FcyRequest::factory()->create([
+            'maker_id' => '1',
+            'status' => FcyRequest::STATUS_DRAFT,
+        ]);
+        $policy = new FcyRequestPolicy;
+
+        $this->assertTrue($policy->view($maker2, $request));
+    }
+
+    public function test_maker_can_view_own_request(): void
+    {
+        $maker = $this->createMockUser('fcymaker', 1);
+        $request = FcyRequest::factory()->create([
+            'maker_id' => '1',
+            'status' => FcyRequest::STATUS_DRAFT,
+        ]);
+        $policy = new FcyRequestPolicy;
+
+        $this->assertTrue($policy->view($maker, $request));
+    }
+
     private function createMockUser(string $roleName, int $userId): HrUser
     {
         return new class($roleName, $userId) extends HrUser

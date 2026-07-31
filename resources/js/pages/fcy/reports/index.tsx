@@ -339,48 +339,88 @@ export default function ReportsIndex({
                             <>
                                 <div className="overflow-x-auto">
                                     <Table className="w-full">
-                                        <TableHeader className="bg-zinc-50/50 dark:bg-zinc-900/40">
-                                            <TableRow className="border-b border-zinc-150 dark:border-zinc-850">
-                                                <TableHead className="px-6 py-3 font-semibold">Request #</TableHead>
-                                                <TableHead className="px-6 py-3 font-semibold">Customer</TableHead>
-                                                <TableHead className="px-6 py-3 font-semibold">Currency</TableHead>
-                                                <TableHead className="px-6 py-3 font-semibold">Amount</TableHead>
-                                                <TableHead className="px-6 py-3 font-semibold">Status</TableHead>
-                                                <TableHead className="px-6 py-3 font-semibold">Date</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {requests.data.map((req) => (
-                                                <TableRow
-                                                    key={req.id}
-                                                    className="border-b border-zinc-150 dark:border-zinc-850 transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30"
-                                                >
-                                                    <TableCell className="px-6 py-3.5 font-mono text-xs font-semibold">
-                                                        {req.request_number}
-                                                    </TableCell>
-                                                    <TableCell className="px-6 py-3.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                                                        {req.customer?.importer_name ?? 'N/A'}
-                                                    </TableCell>
-                                                    <TableCell className="px-6 py-3.5 text-sm">
-                                                        {req.currency?.code ?? 'N/A'}
-                                                    </TableCell>
-                                                    <TableCell className="px-6 py-3.5 text-sm font-mono">
-                                                        {Number(req.fcy_amount_requested).toLocaleString()}
-                                                    </TableCell>
-                                                    <TableCell className="px-6 py-3.5">
-                                                        <Badge className={`px-2.5 py-1 text-xs ${statusBadgeColors[req.status] ?? ''}`}>
-                                                            {req.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="whitespace-nowrap px-6 py-3.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <Calendar className="h-3 w-3" />
-                                                            {new Date(req.created_at).toLocaleDateString()}
-                                                        </span>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
+                                       <TableHeader className="bg-zinc-50/50 dark:bg-zinc-900/40">
+    <TableRow className="border-b border-zinc-150 dark:border-zinc-850">
+        <TableHead className="w-16 px-4 py-3 text-center font-semibold">
+            #
+        </TableHead>
+        <TableHead className="px-6 py-3 font-semibold">
+            Request #
+        </TableHead>
+        <TableHead className="px-6 py-3 font-semibold">
+            Customer
+        </TableHead>
+        <TableHead className="px-6 py-3 font-semibold">
+            Currency
+        </TableHead>
+        <TableHead className="px-6 py-3 font-semibold">
+            Amount
+        </TableHead>
+        <TableHead className="px-6 py-3 font-semibold">
+            Status
+        </TableHead>
+        <TableHead className="px-6 py-3 font-semibold">
+            Date
+        </TableHead>
+    </TableRow>
+</TableHeader>
+
+<TableBody>
+    {requests.data.map((req, index) => (
+        <TableRow
+            key={req.id}
+            className="border-b border-zinc-150 dark:border-zinc-850 transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30"
+        >
+            {/* Row Number */}
+            <TableCell className="w-16 px-4 py-3.5 text-center">
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-zinc-100 px-1.5 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    {(requests.current_page - 1) * requests.per_page + index + 1}
+                </span>
+            </TableCell>
+
+            {/* Request Number */}
+            <TableCell className="px-6 py-3.5 font-mono text-xs font-semibold">
+                {req.request_number}
+            </TableCell>
+
+            {/* Customer */}
+            <TableCell className="px-6 py-3.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                {req.customer?.importer_name ?? 'N/A'}
+            </TableCell>
+
+            {/* Currency */}
+            <TableCell className="px-6 py-3.5 text-sm">
+                {req.currency?.code ?? 'N/A'}
+            </TableCell>
+
+            {/* Amount */}
+            <TableCell className="px-6 py-3.5 text-sm font-mono">
+                {Number(req.fcy_amount_requested).toLocaleString()}
+            </TableCell>
+
+            {/* Status */}
+            <TableCell className="px-6 py-3.5">
+                <Badge
+                    className={`px-2.5 py-1 text-xs ${
+                        statusBadgeColors[req.status] ?? ''
+                    }`}
+                >
+                    {req.status
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                </Badge>
+            </TableCell>
+
+            {/* Date */}
+            <TableCell className="whitespace-nowrap px-6 py-3.5 text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(req.created_at).toLocaleDateString()}
+                </span>
+            </TableCell>
+        </TableRow>
+    ))}
+</TableBody>
                                     </Table>
                                 </div>
 
