@@ -25,7 +25,7 @@ class ReportController extends Controller
     {
         $query = $this->buildQuery($request);
 
-        $requests = $query->paginate(15)->withQueryString();
+        $requests = $query->paginate(10)->withQueryString();
 
         return Inertia::render('fcy/reports/index', [
             'requests' => $requests,

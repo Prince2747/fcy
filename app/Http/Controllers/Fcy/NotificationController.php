@@ -27,7 +27,7 @@ class NotificationController extends Controller
             $query->whereNull('read_at');
         }
 
-        $notifications = $query->paginate(15)->withQueryString();
+        $notifications = $query->paginate(10)->withQueryString();
 
         if ($request->wantsJson()) {
             return response()->json([

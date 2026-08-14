@@ -27,7 +27,7 @@ class CurrencyController extends Controller
             });
         }
 
-        $currencies = $query->orderBy('code')->paginate(10)->withQueryString();
+        $currencies = $query->orderBy('code')->paginate(5)->withQueryString();
 
         return Inertia::render('fcy/settings/currencies/index', [
             'currencies' => $currencies,

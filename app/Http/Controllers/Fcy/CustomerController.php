@@ -44,7 +44,7 @@ class CustomerController extends Controller
         // Order by latest first
         $query->latest();
 
-        $customers = $query->paginate(10)->withQueryString();
+        $customers = $query->paginate(5)->withQueryString();
 
         // Get branches from HR workunits table
         $branches = Workunit::query()

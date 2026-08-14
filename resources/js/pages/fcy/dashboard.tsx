@@ -227,6 +227,7 @@ export default function Dashboard({
                                     <Table className="w-full">
                                         <TableHeader className="bg-zinc-50/50 dark:bg-zinc-900/40">
                                             <TableRow className="border-zinc-150 dark:border-zinc-850 border-b">
+                                                <TableHead className="w-14 px-4 py-3 text-center font-semibold text-zinc-700 dark:text-zinc-350">#</TableHead>
                                                 <TableHead className="dark:text-zinc-350 px-4 py-3 font-semibold text-zinc-700">
                                                     Importer Name
                                                 </TableHead>
@@ -239,11 +240,14 @@ export default function Dashboard({
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {recentCustomers.map((customer) => (
+                                            {recentCustomers.map((customer, index) => (
                                                 <TableRow
                                                     key={customer.id}
                                                     className="border-zinc-150 dark:border-zinc-850 border-b transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30"
                                                 >
+                                                    <TableCell className="w-14 px-4 py-3.5 text-center text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                                        {index + 1}
+                                                    </TableCell>
                                                     <TableCell className="px-4 py-3.5 font-semibold text-zinc-900 dark:text-zinc-100">
                                                         {customer.importer_name}
                                                     </TableCell>
@@ -367,6 +371,7 @@ export default function Dashboard({
                                 <Table className="w-full">
                                     <TableHeader className="bg-zinc-50/50 dark:bg-zinc-900/40">
                                         <TableRow className="border-zinc-150 dark:border-zinc-850 border-b">
+                                            <TableHead className="w-14 px-4 py-3 text-center font-semibold text-zinc-700 dark:text-zinc-350">#</TableHead>
                                             <TableHead className="dark:text-zinc-350 px-4 py-3 font-semibold text-zinc-700">
                                                 Request #
                                             </TableHead>
@@ -385,7 +390,7 @@ export default function Dashboard({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {recentRequests.map((req) => {
+                                        {recentRequests.map((req, index) => {
                                             const badge = statusBadge[
                                                 req.status
                                             ] ?? {
@@ -397,6 +402,9 @@ export default function Dashboard({
                                                     key={req.id}
                                                     className="border-zinc-150 dark:border-zinc-850 border-b transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30"
                                                 >
+                                                    <TableCell className="w-14 px-4 py-3.5 text-center text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                                        {index + 1}
+                                                    </TableCell>
                                                     <TableCell className="px-4 py-3.5 font-mono text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                                                         <Link
                                                             href={fcy.requests.show(

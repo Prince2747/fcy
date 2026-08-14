@@ -252,14 +252,18 @@ export default function PaymentMethodsIndex({ paymentMethods, filters }: Payment
                                     <Table className="w-full">
                                         <TableHeader className="bg-zinc-50/50 dark:bg-zinc-900/40">
                                             <TableRow className="border-b border-zinc-150 dark:border-zinc-850">
+                                                <TableHead className="w-14 px-4 py-3 text-center font-semibold text-zinc-700 dark:text-zinc-350">#</TableHead>
                                                 <TableHead className="py-3 px-6 font-semibold text-zinc-700 dark:text-zinc-350">Name</TableHead>
                                                 <TableHead className="py-3 px-6 font-semibold text-zinc-700 dark:text-zinc-350">Code</TableHead>
                                                 <TableHead className="py-3 px-6 font-semibold text-zinc-700 dark:text-zinc-350 text-right">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {paymentMethods.data.map((method) => (
+                                            {paymentMethods.data.map((method, index) => (
                                                 <TableRow key={method.id} className="hover:bg-zinc-50/40 dark:hover:bg-zinc-900/20 border-b border-zinc-150 dark:border-zinc-850 transition-colors">
+                                                    <TableCell className="w-14 px-4 py-3.5 text-center text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                                        {(paymentMethods.current_page - 1) * paymentMethods.per_page + index + 1}
+                                                    </TableCell>
                                                     <TableCell className="font-semibold text-zinc-900 dark:text-zinc-100 py-3.5 px-6">
                                                         <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{method.name}</span>
                                                     </TableCell>

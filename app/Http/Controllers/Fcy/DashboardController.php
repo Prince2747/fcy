@@ -36,12 +36,12 @@ class DashboardController extends Controller
         ];
 
         $recentCustomers = Customer::latest()
-            ->take(5)
+            ->take(3)
             ->get();
 
         $recentRequests = FcyRequest::with(['customer', 'currency', 'paymentMethod'])
             ->latest()
-            ->take(5)
+            ->take(3)
             ->get();
 
         return Inertia::render('fcy/dashboard', [

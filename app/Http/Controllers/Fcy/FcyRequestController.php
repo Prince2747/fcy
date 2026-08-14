@@ -52,7 +52,7 @@ class FcyRequestController extends Controller
             $query->where('status', $status);
         }
 
-        $requests = $query->paginate(15);
+        $requests = $query->paginate(10);
 
         $requestStats = [
             'total' => FcyRequest::count(),

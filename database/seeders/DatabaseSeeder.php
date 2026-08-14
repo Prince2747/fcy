@@ -11,6 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CurrencySeeder::class,
             PaymentMethodSeeder::class,
+            CustomerSeeder::class,
+            FcyRequestSeeder::class,
         ]);
     }
 }

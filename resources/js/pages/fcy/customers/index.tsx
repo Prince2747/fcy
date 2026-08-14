@@ -327,6 +327,7 @@ export default function CustomersIndex({ customers, branches, filters }: Custome
                                     <Table className="w-full">
                                         <TableHeader className="bg-zinc-50/50 dark:bg-zinc-900/40">
                                             <TableRow className="border-b border-zinc-150 dark:border-zinc-850">
+                                                <TableHead className="w-14 px-4 py-3 text-center font-semibold text-zinc-700 dark:text-zinc-350">#</TableHead>
                                                 <TableHead className="py-3 px-6 font-semibold text-zinc-700 dark:text-zinc-350">Importer Name</TableHead>
                                                 <TableHead className="py-3 px-6 font-semibold text-zinc-700 dark:text-zinc-350">Branch</TableHead>
                                                 <TableHead className="py-3 px-6 font-semibold text-zinc-700 dark:text-zinc-350">NBE ACC. NO</TableHead>
@@ -336,8 +337,11 @@ export default function CustomersIndex({ customers, branches, filters }: Custome
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {customers.data.map((customer) => (
+                                            {customers.data.map((customer, index) => (
                                                 <TableRow key={customer.id} className="hover:bg-zinc-50/40 dark:hover:bg-zinc-900/20 border-b border-zinc-150 dark:border-zinc-850 transition-colors stagger-item">
+                                                    <TableCell className="w-14 px-4 py-3.5 text-center text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                                        {(customers.current_page - 1) * customers.per_page + index + 1}
+                                                    </TableCell>
                                                     <TableCell className="font-semibold text-zinc-900 dark:text-zinc-100 py-3.5 px-6">
                                                         {customer.importer_name}
                                                     </TableCell>

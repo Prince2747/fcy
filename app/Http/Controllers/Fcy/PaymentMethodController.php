@@ -26,7 +26,7 @@ class PaymentMethodController extends Controller
             });
         }
 
-        $paymentMethods = $query->orderBy('name')->paginate(10)->withQueryString();
+        $paymentMethods = $query->orderBy('name')->paginate(5)->withQueryString();
 
         return Inertia::render('fcy/settings/payment-methods/index', [
             'paymentMethods' => $paymentMethods,
