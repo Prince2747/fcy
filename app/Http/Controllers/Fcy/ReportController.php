@@ -19,6 +19,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ReportController extends Controller
 {
     /**
+     * Zero-based column indices of the monetary amount columns that should be
+     * exported as real numeric cells with thousands separators.
+     */
+    private const AMOUNT_COLUMNS = [12, 13];
+
+    /**
      * Display the reports page with filter options.
      */
     public function index(Request $request): Response
@@ -96,7 +102,7 @@ class ReportController extends Controller
      */
     private function buildRow(FcyRequest $req, int $serialNumber): array
     {
-        return [
+        $cells = [
             (string) $serialNumber,
             $req->request_number,
             $this->financialYear($req->created_at),
@@ -111,12 +117,17 @@ class ReportController extends Controller
                 : (string) $req->proforma_invoice_date,
             $req->paymentMethod?->name ?? 'N/A',
             $req->currency?->code ?? 'N/A',
-            (string) $req->fcy_amount_requested,
-            (string) $req->total_amount_in_usd,
+            $req->fcy_amount_requested === null ? 'N/A' : number_format((float) $req->fcy_amount_requested, 2),
+            $req->total_amount_in_usd === null ? 'N/A' : number_format((float) $req->total_amount_in_usd, 2),
             $req->importing_items,
             $req->supplier_country,
             $req->approved_at?->format('Y-m-d') ?? 'N/A',
         ];
+
+        return array_map(
+            fn (string $cell): string => mb_strtoupper($cell),
+            $cells,
+        );
     }
 
     /**
@@ -244,6 +255,7 @@ class ReportController extends Controller
         // Styles
         $xml .= '<Styles>';
         $xml .= '<Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>';
+        $xml .= '<Style ss:ID="Number"><NumberFormat ss:Format="#,##0.00"/></Style>';
         $xml .= '</Styles>'."\n";
 
         $xml .= '<Worksheet ss:Name="FCY Requests">'."\n";
@@ -251,10 +263,24 @@ class ReportController extends Controller
 
         foreach ($rows as $rowIndex => $row) {
             $xml .= '<Row>';
-            foreach ($row as $cell) {
-                $style = $rowIndex === 0 ? ' ss:StyleID="Header"' : '';
-                $xml .= '<Cell'.$style.'><Data ss:Type="String">'.$this->escapeXml((string) $cell).'</Data></Cell>';
+
+            foreach ($row as $colIndex => $cell) {
+                if ($rowIndex === 0) {
+                    $xml .= '<Cell ss:StyleID="Header"><Data ss:Type="String">'.$this->escapeXml((string) $cell).'</Data></Cell>';
+
+                    continue;
+                }
+
+                if (in_array($colIndex, self::AMOUNT_COLUMNS, true)) {
+                    $numeric = str_replace(',', '', (string) $cell);
+                    $xml .= '<Cell ss:StyleID="Number"><Data ss:Type="Number">'.$this->escapeXml($numeric).'</Data></Cell>';
+
+                    continue;
+                }
+
+                $xml .= '<Cell><Data ss:Type="String">'.$this->escapeXml((string) $cell).'</Data></Cell>';
             }
+
             $xml .= '</Row>'."\n";
         }
 
