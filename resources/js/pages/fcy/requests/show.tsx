@@ -10,14 +10,15 @@ import {
     FileCheck,
     FileX,
     Pencil,
+    Printer,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import type { FcyRequest, FcyRequestStatus, BreadcrumbItem } from '@/types';
-import { useState } from 'react';
 import fcy from '@/routes/fcy';
+import type { FcyRequest, FcyRequestStatus, BreadcrumbItem } from '@/types';
 
 interface ShowProps {
     request: FcyRequest;
@@ -174,11 +175,14 @@ export default function Show({ request, userRoles }: ShowProps) {
         <>
             <Head title={request.request_number} />
 
-            <div className="flex flex-col gap-4 p-5">
+            <div className="print-area flex flex-col gap-4 p-5">
                 {/* Header */}
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-2.5">
-                        <Link href={fcy.requests.index().url}>
+                        <Link
+                            href={fcy.requests.index().url}
+                            className="print:hidden"
+                        >
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -211,24 +215,36 @@ export default function Show({ request, userRoles }: ShowProps) {
                         </div>
                     </div>
 
-                    {canEdit && (
-                        <Link
-                            href={
-                                fcy.requests.edit({
-                                    fcyRequest: request.id,
-                                }).url
-                            }
-                        >
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 gap-1.5 px-3"
+                    <div className="print:hidden flex items-center gap-2">
+                        {canEdit && (
+                            <Link
+                                href={
+                                    fcy.requests.edit({
+                                        fcyRequest: request.id,
+                                    }).url
+                                }
                             >
-                                <Pencil className="h-3.5 w-3.5" />
-                                Edit Request
-                            </Button>
-                        </Link>
-                    )}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 gap-1.5 px-3"
+                                >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                    Edit Request
+                                </Button>
+                            </Link>
+                        )}
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 px-3"
+                            onClick={() => window.print()}
+                        >
+                            <Printer className="h-3.5 w-3.5" />
+                            Print
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Request Details */}
@@ -467,7 +483,7 @@ export default function Show({ request, userRoles }: ShowProps) {
                 {(canMakerSubmit() ||
                     canCheckerAct() ||
                     canApproverAct()) && (
-                    <Card className="border border-zinc-200/80 dark:border-zinc-800/80">
+                    <Card className="print:hidden border border-zinc-200/80 dark:border-zinc-800/80">
                         <CardHeader className="px-4 py-3">
                             <CardTitle className="text-sm font-semibold">
                                 Actions

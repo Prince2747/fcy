@@ -226,3 +226,122 @@
         transition-duration: 0.01ms !important;
     }
 }
+/* ────────────────────────────────────────────── */
+/*  Print Styles                                  */
+/* ────────────────────────────────────────────── */
+@media print {
+    @page {
+        size: A4;
+        margin: 4mm;
+    }
+
+    /* Hide the sidebar and its gap spacer */
+    [data-slot='sidebar'] {
+        display: none !important;
+    }
+
+    /* Hide the top header (breadcrumbs, sidebar toggle, theme toggle, bell) */
+    [data-slot='sidebar-inset'] > header,
+    [data-slot='sidebar-inset'] header {
+        display: none !important;
+    }
+
+    /* Reset the inset main so it uses the full page width */
+    main[data-slot='sidebar-inset'] {
+        margin: 0 !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    /* Ensure the printed content is always black-on-white,
+       regardless of dark-mode toggle */
+    .print-area {
+        color: #111 !important;
+        background: #fff !important;
+        /* Remove the screen padding (p-5) and reduce the gap between
+           cards (gap-4) so the details use the full page */
+        padding: 0 !important;
+        gap: 0.375rem !important;
+    }
+
+    .print-area * {
+        color: #111 !important;
+        border-color: #d1d5db !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    /* Keep cards together and give them a light border */
+    .print-area [class*='border'] {
+        border-color: #d1d5db !important;
+    }
+
+    .print-area .card,
+    .print-area [class*='Card'] {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* ── Compact layout so everything fits on one page ── */
+    /* Tighten each card's internal padding and spacing */
+    .print-area [data-slot='card'] {
+        gap: 0.125rem !important;
+        padding-top: 0.375rem !important;
+        padding-bottom: 0.375rem !important;
+    }
+
+    .print-area [data-slot='card-header'] {
+        padding: 0.25rem 0.625rem !important;
+    }
+
+    .print-area [data-slot='card-content'] {
+        padding: 0 0.625rem 0.375rem !important;
+    }
+
+    /* Compress the space-y stacks inside card content */
+    .print-area [class*='space-y-'] > :not(:last-child) {
+        margin-bottom: 0.375rem !important;
+    }
+
+    /* Tighten note boxes */
+    .print-area [class*='p-2.5'] {
+        padding: 0.375rem !important;
+    }
+
+    /* Slightly smaller print typography */
+    .print-area [class*='text-sm'] {
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+    }
+
+    .print-area [class*='text-[11px]'] {
+        font-size: 10px !important;
+    }
+
+    .print-area h1,
+    .print-area [class*='text-xl'] {
+        font-size: 1.125rem !important;
+    }
+
+    /* Allow subtle background fills for activity notes */
+    .print-area [class*='bg-zinc-50'],
+    .print-area [class*='bg-amber-50'],
+    .print-area [class*='bg-blue-50'] {
+        background-color: #f9fafb !important;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+        color: #111 !important;
+    }
+
+    /* Force color-adjust for browsers that try to strip backgrounds */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
