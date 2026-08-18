@@ -326,6 +326,12 @@
         font-size: 1.125rem !important;
     }
 
+    /* Keep the bank logo crisp and on one line with the letterhead */
+    .print-area img {
+        display: inline-block;
+        max-width: 100%;
+    }
+
     /* Allow subtle background fills for activity notes */
     .print-area [class*='bg-zinc-50'],
     .print-area [class*='bg-amber-50'],

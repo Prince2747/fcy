@@ -131,6 +131,37 @@ class ReportController extends Controller
     }
 
     /**
+     * Build the totals row for the two monetary amount columns.
+     *
+     * @param  Collection<int, FcyRequest>  $requests
+     * @return list<string>
+     */
+    private function buildTotalsRow(Collection $requests): array
+    {
+        $fcyAmountSum = 0.0;
+        $usdAmountSum = 0.0;
+
+        foreach ($requests as $req) {
+            if ($req->fcy_amount_requested !== null) {
+                $fcyAmountSum += (float) $req->fcy_amount_requested;
+            }
+
+            if ($req->total_amount_in_usd !== null) {
+                $usdAmountSum += (float) $req->total_amount_in_usd;
+            }
+        }
+
+        $row = array_fill(0, count($this->exportHeaders()), '');
+
+        $row[0] = 'TOTAL';
+        // Column indices 12 and 13 mirror the monetary amount columns in buildRow().
+        $row[12] = number_format($fcyAmountSum, 2);
+        $row[13] = number_format($usdAmountSum, 2);
+
+        return $row;
+    }
+
+    /**
      * Get the export column headers.
      *
      * @return list<string>
@@ -203,6 +234,10 @@ class ReportController extends Controller
                 $serialNumber++;
             }
 
+            if ($requests->isNotEmpty()) {
+                fputcsv($handle, $this->buildTotalsRow($requests));
+            }
+
             fclose($handle);
         };
 
@@ -231,6 +266,10 @@ class ReportController extends Controller
                 $serialNumber++;
             }
 
+            if ($requests->isNotEmpty()) {
+                $rows[] = $this->buildTotalsRow($requests);
+            }
+
             echo $this->buildExcelXml($rows);
         };
 
@@ -256,17 +295,34 @@ class ReportController extends Controller
         $xml .= '<Styles>';
         $xml .= '<Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>';
         $xml .= '<Style ss:ID="Number"><NumberFormat ss:Format="#,##0.00"/></Style>';
+        $xml .= '<Style ss:ID="Bold"><Font ss:Bold="1"/></Style>';
+        $xml .= '<Style ss:ID="BoldNumber"><Font ss:Bold="1"/><NumberFormat ss:Format="#,##0.00"/></Style>';
         $xml .= '</Styles>'."\n";
 
         $xml .= '<Worksheet ss:Name="FCY Requests">'."\n";
         $xml .= '<Table>'."\n";
 
         foreach ($rows as $rowIndex => $row) {
+            $isTotalsRow = $rowIndex > 0 && ($row[0] ?? '') === 'TOTAL';
+
             $xml .= '<Row>';
 
             foreach ($row as $colIndex => $cell) {
                 if ($rowIndex === 0) {
                     $xml .= '<Cell ss:StyleID="Header"><Data ss:Type="String">'.$this->escapeXml((string) $cell).'</Data></Cell>';
+
+                    continue;
+                }
+
+                if ($isTotalsRow && in_array($colIndex, self::AMOUNT_COLUMNS, true)) {
+                    $numeric = str_replace(',', '', (string) $cell);
+                    $xml .= '<Cell ss:StyleID="BoldNumber"><Data ss:Type="Number">'.$this->escapeXml($numeric).'</Data></Cell>';
+
+                    continue;
+                }
+
+                if ($isTotalsRow) {
+                    $xml .= '<Cell ss:StyleID="Bold"><Data ss:Type="String">'.$this->escapeXml((string) $cell).'</Data></Cell>';
 
                     continue;
                 }

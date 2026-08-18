@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateFcyRequest;
 use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\FcyRequest;
+use App\Models\HrUser;
 use App\Models\PaymentMethod;
 use App\Models\Workunit;
 use App\Services\NotificationService;
@@ -99,8 +100,15 @@ class FcyRequestController extends Controller
     {
         $fcyRequest->load(['customer', 'currency', 'paymentMethod']);
 
+        $maker = $fcyRequest->maker_id ? HrUser::find($fcyRequest->maker_id) : null;
+        $checker = $fcyRequest->checker_id ? HrUser::find($fcyRequest->checker_id) : null;
+        $approver = $fcyRequest->approver_id ? HrUser::find($fcyRequest->approver_id) : null;
+
         return Inertia::render('fcy/requests/show', [
             'request' => $fcyRequest,
+            'maker' => $maker?->name,
+            'checker' => $checker?->name,
+            'approver' => $approver?->name,
             'userRoles' => $request->user()->getFcyRoles(),
         ]);
     }

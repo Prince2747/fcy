@@ -1,4 +1,4 @@
-
+﻿
 import { Head, Link, router, usePage, setLayoutProps } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -22,6 +22,9 @@ import type { FcyRequest, FcyRequestStatus, BreadcrumbItem } from '@/types';
 
 interface ShowProps {
     request: FcyRequest;
+    maker: string | null;
+    checker: string | null;
+    approver: string | null;
     userRoles: string[];
 }
 
@@ -65,7 +68,13 @@ const statusConfig: Record<
     },
 };
 
-export default function Show({ request, userRoles }: ShowProps) {
+export default function Show({
+    request,
+    maker,
+    checker,
+    approver,
+    userRoles,
+}: ShowProps) {
     const { auth } = usePage().props as {
         auth: {
             user: {
@@ -176,6 +185,29 @@ export default function Show({ request, userRoles }: ShowProps) {
             <Head title={request.request_number} />
 
             <div className="print-area flex flex-col gap-4 p-5">
+                {/* Bank Letterhead */}
+                <div className="flex items-center justify-between gap-4 border-b border-zinc-200/80 pb-3 dark:border-zinc-800/80">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <img
+                            src="/mainlogo.png"
+                            alt="Bank Logo"
+                            className="h-12 w-auto shrink-0 object-contain"
+                        />
+                        <div className="min-w-0">
+                            <p className="text-base font-bold tracking-tight text-zinc-900 dark:text-white">
+                                International Banking Service Department
+                            </p>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                Foreign Currency (FCY) Request
+                            </p>
+                        </div>
+                    </div>
+
+                    <p className="hidden text-right text-xs text-zinc-500 dark:text-zinc-400 md:block">
+                        {new Date().toLocaleDateString()}
+                    </p>
+                </div>
+
                 {/* Header */}
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-2.5">
@@ -399,7 +431,7 @@ export default function Show({ request, userRoles }: ShowProps) {
                 </div>
 
                 {/* Activity & Notes */}
-                <Card className="border border-zinc-200/80 dark:border-zinc-800/80">
+                <Card className="print:hidden border border-zinc-200/80 dark:border-zinc-800/80">
                     <CardHeader className="px-4 py-3">
                         <CardTitle className="text-sm font-semibold">
                             Activity & Notes
@@ -476,6 +508,67 @@ export default function Show({ request, userRoles }: ShowProps) {
                                     No notes added yet.
                                 </p>
                             )}
+                    </CardContent>
+                </Card>
+
+                {/* Signatures / Approval */}
+                <Card className="border border-zinc-200/80 dark:border-zinc-800/80">
+                    <CardHeader className="px-4 py-3">
+                        <CardTitle className="text-sm font-semibold">
+                            Signatures / Approval
+                        </CardTitle>
+                    </CardHeader>
+
+                    <CardContent className="px-4 pb-4">
+                        <div className="flex items-center justify-between gap-4 border-b border-zinc-100 py-2 last:border-b-0 dark:border-zinc-800">
+                            <div className="min-w-0">
+                                <Label className="text-[11px] text-zinc-500">
+                                    Prepared By (Maker)
+                                </Label>
+                                <p className="mt-0.5 text-sm font-medium text-zinc-900 dark:text-white">
+                                    {maker ?? '—'}
+                                </p>
+                            </div>
+                            <p className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+                                {new Date(request.created_at).toLocaleDateString()}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 border-b border-zinc-100 py-2 last:border-b-0 dark:border-zinc-800">
+                            <div className="min-w-0">
+                                <Label className="text-[11px] text-zinc-500">
+                                    Checked By
+                                </Label>
+                                <p className="mt-0.5 text-sm font-medium text-zinc-900 dark:text-white">
+                                    {checker ?? '—'}
+                                </p>
+                            </div>
+                            <p className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+                                {request.checked_at
+                                    ? new Date(
+                                          request.checked_at
+                                      ).toLocaleDateString()
+                                    : 'Pending'}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 border-b border-zinc-100 py-2 last:border-b-0 dark:border-zinc-800">
+                            <div className="min-w-0">
+                                <Label className="text-[11px] text-zinc-500">
+                                    Authorized By (Approver)
+                                </Label>
+                                <p className="mt-0.5 text-sm font-medium text-zinc-900 dark:text-white">
+                                    {approver ?? '—'}
+                                </p>
+                            </div>
+                            <p className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+                                {request.approved_at
+                                    ? new Date(
+                                          request.approved_at
+                                      ).toLocaleDateString()
+                                    : 'Pending'}
+                            </p>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -593,4 +686,3 @@ export default function Show({ request, userRoles }: ShowProps) {
         </>
     );
 }
-

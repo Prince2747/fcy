@@ -21,7 +21,7 @@ class FcyRequestFactory extends Factory
     public function definition(): array
     {
         return [
-            'request_number' => 'GDA-FCY-'.fake()->unique()->numerify('0000000000'),
+            'request_number' => 'GDA-FCY-'.fake()->unique()->numerify('##########'),
             'customer_id' => Customer::factory(),
             'proforma_invoice_number' => fake()->numerify('PI-########'),
             'proforma_invoice_date' => fake()->date(),
